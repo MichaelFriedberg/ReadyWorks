@@ -5629,6 +5629,38 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
@@ -5637,7 +5669,7 @@ __webpack_require__.r(__webpack_exports__);
     jquery__WEBPACK_IMPORTED_MODULE_0___default()('#table_id').DataTable({
       "processing": true,
       "serverSide": true,
-      "ajax": "../server_side/scripts/server_processing.php"
+      "ajax": "/api/table"
     });
   }
 });
@@ -94446,23 +94478,89 @@ var staticRenderFns = [
       _c("table", { staticClass: "display", attrs: { id: "table_id" } }, [
         _c("thead", [
           _c("tr", [
-            _c("th", [_vm._v("Column 1")]),
+            _c("th", [_vm._v("Computer Name")]),
             _vm._v(" "),
-            _c("th", [_vm._v("Column 2")]),
+            _c("th", [_vm._v("Migration Status")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Description")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Location")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Computer Type")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Computer Model")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Operating System")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Windows 10 Version")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Memory (GB)")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Disk Size (GB)")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Free Space (GB)")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Serial Number")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Business Unit")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Department")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("HW Replacement Ordered")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Static IP")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("State")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Central Build Site")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Last Logon User")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Asset Vetted")]),
           ]),
         ]),
         _vm._v(" "),
-        _c("tbody", [
+        _c("tfoot", [
           _c("tr", [
-            _c("td", [_vm._v("Row 1 Data 1")]),
+            _c("th", [_vm._v("Computer Name")]),
             _vm._v(" "),
-            _c("td", [_vm._v("Row 1 Data 2")]),
-          ]),
-          _vm._v(" "),
-          _c("tr", [
-            _c("td", [_vm._v("Row 2 Data 1")]),
+            _c("th", [_vm._v("Migration Status")]),
             _vm._v(" "),
-            _c("td", [_vm._v("Row 2 Data 2")]),
+            _c("th", [_vm._v("Description")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Location")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Computer Type")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Computer Model")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Operating System")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Windows 10 Version")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Memory (GB)")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Disk Size (GB)")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Free Space (GB)")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Serial Number")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Business Unit")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Department")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("HW Replacement Ordered")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Static IP")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("State")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Central Build Site")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Last Logon User")]),
+            _vm._v(" "),
+            _c("th", [_vm._v("Asset Vetted")]),
           ]),
         ]),
       ]),
