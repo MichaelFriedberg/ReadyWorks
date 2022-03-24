@@ -41,28 +41,40 @@ class ComputerController extends Controller
         $result = [];
         $params = [];
         $draw = $request->draw;
+        $length = $request->length;
         if (isset($request->search['value'])) {
             $params['search'] = $request->search['value'];
         }
-//        $params['limit'] = $request->length;
-        $page = $request->draw - 1;
-//        $params['offset'] = $params['limit'] * $page;
+        if ($request->columns) {
+            $searchColumnValue = $this->getSearchForColumn($request->columns);
+            if ($searchColumnValue) {
+                $params['search_column'] = $searchColumnValue[0];
+                $params['search_term'] = $searchColumnValue[1];
+            }
+        }
+        $params['limit'] = $length;
+        $page = $draw - 1;
+        $params['offset'] = $params['limit'] * $page;
         $computerModel = new Computer();
         $data =  $computerModel->getTableData($params);
         $count = $computerModel->getCount();
-        $result['data'] = $data;
-        $result["recordsFiltered"] = $count;
+        $result['data'] = $data['data'] ?? [];
+        $result["recordsFiltered"] = $data['total'] ?? $count;
         $result['recordsTotal'] = $count;
         $result['draw'] = $draw;
         return $result;
     }
 
     /**
-     * @return mixed
-     *
+     * @param array $columns
+     * @return array|bool[]
      */
-    public function dataTable2() {
-        $computers = Computer::all(self::COLUMNS);
-        return DataTables::of($computers)->make();
+    private function getSearchForColumn(array $columns) {
+        foreach (Computer::SELECT_COLUMNS as $ind => $column) {
+                 if ($searchTerm = $columns[$ind]['search']['value'] ?? false) {
+                     return [$column , $searchTerm];
+                 }
+        }
+        return false;
     }
 }

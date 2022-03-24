@@ -16,17 +16,59 @@ class Computer extends Model
     const CACHE_KEY_LOCATION = 'location';
     const CACHE_TTL = 86400;
 
+    const SEARCH_EXACT = ['computer_type', 'department'];
+
+    // Keep order the same as in TableComponent.vue
+    const SELECT_COLUMNS = array(
+        'name',
+        'migration_status',
+        'user_name',
+        'location',
+        'computer_type',
+        'computer_model',
+        'operating_system',
+        'windows_10_version',
+        'memory_gb',
+        'disk_size_gb',
+        'free_space_gb',
+        'serial',
+        'business_unit',
+        'department',
+        'replacement_ordered',
+        'static_ip',
+        'state',
+        'central_build_site',
+        'last_logon_user',
+        'vetted'
+    );
+
+    const SQL_SELECT_DISTINCT_DEPARTMENT = <<<SQL
+SELECT DISTINCT department from computers;
+SQL;
+
+    const SQL_SELECT_DISTINCT_TYPE = <<<SQL
+SELECT DISTINCT computer_type from computers;
+SQL;
+
+    const SQL_SEARCH_LIKE_COMPUTER_MODEL = <<<SQL
+WHERE :search_column LIKE :search_term
+SQL;
+
+    const SQL_SEARCH_EXACT_COMPUTER_MODEL = <<<SQL
+ WHERE :search_column = :search_term
+SQL;
+
     const SQL_TOP_TEN_COMPUTERS = <<<SQL
 SELECT
 computer_model,
 total
 FROM (SELECT computer_model,
 COUNT(*) total,
-rank() over(order by count(*) desc) as rnk
+rank() over(ORDER BY COUNT(*) DESC) as rnk
 FROM computers
 GROUP BY computer_model
-ORDER BY total DESC) as total_models
-where rnk <= 10
+ORDER BY total DESC) AS total_models
+WHERE rnk <= 10
 SQL;
 
     const SQL_COMPUTER_BY_OPERATING_SYSTEM = <<<SQL
@@ -44,49 +86,47 @@ ORDER BY total DESC;
 SQL;
 
     const SQL_TABLE = <<<SQL
-%s
 SELECT `name`,`migration_status`,`user_name`,`location`,`computer_type`,`computer_model`,
        `operating_system`,`windows_10_version`,`memory_gb`,`disk_size_gb`,`free_space_gb`,
        `serial`,`business_unit`,`department`,`replacement_ordered`,`static_ip`,`state`,
-       `central_build_site`,`last_logon_user`,`vetted`
+       `central_build_site`,`last_logon_user`,`vetted`, COUNT(*) over() total_count
 FROM computers
+%s
 %s
 ;
 SQL;
 
-    const SQL_DECLARE = <<<SQL
-DECLARE @search AS VARCHAR(100)= :search;
+    const SQL_LIMIT_WITH_OFFSET = <<<SQL
+LIMIT :offset,:limit
 SQL;
 
     const SQL_TABLE_SEARCH = <<<SQL
 WHERE
-`name` LIKE @search OR
-`migration_status` LIKE @search OR
-`user_name` LIKE @search OR
-`location` LIKE @search OR
-`computer_type` LIKE @search OR
-`computer_model` LIKE @search OR
-`operating_system` LIKE @search OR
-`windows_10_version` LIKE @search OR
-`memory_gb` LIKE @search OR
-`disk_size_gb` LIKE @search OR
-`free_space_gb` LIKE @search OR
-`serial` LIKE @search OR
-`business_unit` LIKE @search OR
-`department` LIKE @search OR
-`replacement_ordered` LIKE @search OR
-`static_ip` LIKE @search OR
-`state` LIKE @search OR
-`central_build_site` LIKE @search OR
-`last_logon_user` LIKE @search OR
-`vetted` LIKE @search
+`name` LIKE %s OR
+`migration_status` LIKE %s OR
+`user_name` LIKE %s OR
+`location` LIKE %s OR
+`computer_type` LIKE %s OR
+`computer_model` LIKE %s OR
+`operating_system` LIKE %s OR
+`windows_10_version` LIKE %s OR
+`memory_gb` LIKE %s OR
+`disk_size_gb` LIKE %s OR
+`free_space_gb` LIKE %s OR
+`serial` LIKE %s OR
+`business_unit` LIKE %s OR
+`department` LIKE %s OR
+`replacement_ordered` LIKE %s OR
+`static_ip` LIKE %s OR
+`state` LIKE %s OR
+`central_build_site` LIKE %s OR
+`last_logon_user` LIKE %s OR
+`vetted` LIKE %s
 SQL;
 
     const SQL_TABLE_COUNT = <<<SQL
-SELECT count(*) as total FROM computers;
+SELECT count(*) AS total FROM computers;
 SQL;
-
-
 
     /**
      * @return array|mixed
@@ -98,7 +138,6 @@ SQL;
         );
 
         return $this->formatData($data, 'computer_model');
-
     }
 
     /**
@@ -113,7 +152,10 @@ SQL;
         return $this->formatData($data, 'operating_system');
     }
 
-    public function getByLocation() {
+    /**
+     * @return array|array[]
+     */
+    public function getByLocation():array {
         $data = $this->getRecord(
             self::SQL_COMPUTER_BY_LOCATION,
             self::CACHE_KEY_LOCATION
@@ -122,22 +164,50 @@ SQL;
         return $this->formatData($data, 'location');
     }
 
-    public function getCount() {
+    /**
+     * @return int
+     */
+    public function getCount():int {
         $data = $this->getRecord(self::SQL_TABLE_COUNT);
-        return $data[0]->total;
+        return (int) $data[0]->total;
     }
 
-    public function getTableData(array $params) {
+    /**
+     * @param array $params
+     * @return array
+     */
+    public function getTableData(array $params):array {
         $result = [];
+        $setTotal = false;
         if (isset($params['search'])) {
-            $sql = sprintf(self::SQL_TABLE, self::SQL_DECLARE,self::SQL_TABLE_SEARCH);
+            $bindings = $this->buildBindings($params['search']);
+            $whereQuery = $this->addNamedBindsToQuery($bindings);
+            // unset we wont use these names for bindings
+            unset($params['search']);
+            $params = array_merge($bindings, $params);
+            $sql = sprintf(self::SQL_TABLE, $whereQuery, self::SQL_LIMIT_WITH_OFFSET);
+        }
+        elseif (isset($params['search_column'])) {
+            $columnName = $params['search_column'];
+            if (in_array($columnName, self::SEARCH_EXACT)) {
+                $sql = sprintf(self::SQL_TABLE, self::SQL_SEARCH_EXACT_COMPUTER_MODEL, self::SQL_LIMIT_WITH_OFFSET);
+            }
+            else {
+                $sql = sprintf(self::SQL_TABLE, self::SQL_SEARCH_LIKE_COMPUTER_MODEL, self::SQL_LIMIT_WITH_OFFSET);
+                $params['search_term'] = '%' . $params['search_term'] . '%';
+            }
         }
         else {
-            $sql = sprintf(self::SQL_TABLE, '','');
+            $sql = sprintf(self::SQL_TABLE,'',self::SQL_LIMIT_WITH_OFFSET);
         }
-        $data = $this->getRecord($sql, '', $params);
+        $cacheKey = $this->buildCacheKey($params);
+        $data = $this->getRecord($sql, $cacheKey, $params);
         foreach ($data as $datum) {
-            $result[] = array(
+            if (!$setTotal) {
+                $result['total'] = $datum->total_count;
+                $setTotal = true;
+            }
+            $result['data'][] = array(
                 $datum->name,
                 $datum->migration_status,
                 $datum->user_name,
@@ -165,11 +235,11 @@ SQL;
 
     /**
      * @param string $query
-     * @param string $cacheKey
+     * @param string|null $cacheKey
      *
      * @return array|mixed
      */
-    private function getRecord(string $query, string $cacheKey = '', $params = []) {
+    private function getRecord(string $query, $cacheKey = null, $params = []) {
         if ($cacheKey) {
             $record = Cache::get($cacheKey);
             if ($record) {
@@ -194,5 +264,47 @@ SQL;
             $result['totals'][] = $total;
         }
         return $result;
+    }
+
+    /**
+     * @param string $searchTerm
+     * @return array
+     */
+    private function buildBindings(string $searchTerm): array {
+        $bindings = [];
+        $total = count(self::SELECT_COLUMNS);
+        for ($i = 0; $i < $total; $i++) {
+            $bindings["search${i}"] = "%${searchTerm}%";
+        }
+        return $bindings;
+    }
+
+    /**
+     * @param array $bindings
+     * @return string
+     */
+    private function addNamedBindsToQuery(array $bindings): string {
+        $namedBindings = [];
+        $keys = array_keys($bindings);
+        foreach ($keys as $key) {
+            // this form of interpolation require if : is prefixed
+            $namedBindings[] = ":$key";
+        }
+        return sprintf(self::SQL_TABLE_SEARCH, ...$namedBindings);
+    }
+
+    private function buildCacheKey($params) {
+        if ($searchTerm = $params['search0'] ?? false) {
+            return "cache_key_search_${searchTerm}";
+        }
+
+        if (isset($params['search_column'])) {
+            $columnName = $params['search_column'];
+            $searchTerm = $params['search_term'];
+            return "cache_key_column_search_${columnName}_${searchTerm}";
+        }
+
+        $offset = $params['offset'];
+        return "cache_key_offset_${offset}";
     }
 }

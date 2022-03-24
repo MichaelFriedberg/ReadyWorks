@@ -14,6 +14,8 @@ import VueRouter from 'vue-router';
 import axios from 'axios';
 import { routes } from './routes';
 import 'bootstrap';
+import Vuetify from 'vuetify';
+import 'vuetify/dist/vuetify.min.css';
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -23,6 +25,7 @@ import 'bootstrap';
 
 Vue.use(VueRouter);
 Vue.use(VueAxios, axios);
+Vue.use(Vuetify);
 
 const router = new VueRouter({
     mode: 'history',
@@ -30,6 +33,7 @@ const router = new VueRouter({
 });
 
 const app = new Vue({
+    vuetify: new Vuetify(),
     el: '#app',
     router: router,
     render: h => h(App),
